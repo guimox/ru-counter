@@ -14,16 +14,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set Up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.21"
-
-      - name: Build the App
-        run: |
-          go mod download
-          go build -o main .
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -83,6 +73,18 @@ jobs:
             APP_PORT=${{ secrets.APP_PORT }}
             DOCKER_CONTAINER_NAME=${{ secrets.DOCKER_CONTAINER_NAME }}
             GITHUB_REPOSITORY=${{ github.repository }}
+            NUMBER_NEWSLETTERS=${{ secrets.NUMBER_NEWSLETTERS }}
+            NEWSLETTER_JID1=${{ secrets.NEWSLETTER_JID1 }}
+            NEWSLETTER_NAME1=${{ secrets.NEWSLETTER_NAME1 }}
+            NEWSLETTER_JID2=${{ secrets.NEWSLETTER_JID2 }}
+            NEWSLETTER_NAME2=${{ secrets.NEWSLETTER_NAME2 }}
+            NEWSLETTER_JID3=${{ secrets.NEWSLETTER_JID3 }}
+            NEWSLETTER_NAME3=${{ secrets.NEWSLETTER_NAME3 }}
+            NEWSLETTER_JID4=${{ secrets.NEWSLETTER_JID4 }}
+            NEWSLETTER_NAME4=${{ secrets.NEWSLETTER_NAME4 }}
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            GITHUB_OWNER=${{ secrets.GITHUB_OWNER }}
+            GITHUB_REPO=${{ secrets.GITHUB_REPO }}
             EOF
             chmod 600 .env
 

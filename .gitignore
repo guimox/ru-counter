@@ -1,2 +1,4 @@
 session.db
 .env
+/cmd/main
+*.exe
