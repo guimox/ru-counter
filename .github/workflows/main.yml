@@ -82,6 +82,10 @@ jobs:
             NEWSLETTER_NAME3=${{ secrets.NEWSLETTER_NAME3 }}
             NEWSLETTER_JID4=${{ secrets.NEWSLETTER_JID4 }}
             NEWSLETTER_NAME4=${{ secrets.NEWSLETTER_NAME4 }}
+            VPS_SSH_KEY=${{ secrets.VPS_SSH_KEY }}
+            VPS_IP_ADDRESS=${{ secrets.VPS_IP_ADDRESS }}
+            VPS_USERNAME=${{ secrets.VPS_USERNAME }}
+            VPS_PORT=${{ secrets.VPS_PORT }}
             PAT_TOKEN=${{ secrets.PAT_TOKEN }}
             EOF
             chmod 600 .env
