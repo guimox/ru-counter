@@ -234,24 +234,14 @@ func (g *GitHubUpdater) PerformWeeklyUpdate() {
 func LoadConfig() (Config, error) {
 	_ = godotenv.Load()
 
-	githubPatToken := os.Getenv("GITHUB_PAT_TOKEN")
+	githubPatToken := os.Getenv("PAT_TOKEN")
 	if githubPatToken == "" {
-		return Config{}, fmt.Errorf("GITHUB_PAT_TOKEN environment variable not set")
-	}
-
-	githubRepoOwner := os.Getenv("GITHUB_OWNER")
-	if githubRepoOwner == "" {
-		return Config{}, fmt.Errorf("GITHUB_OWNER environment variable not set")
-	}
-
-	githubRepoName := os.Getenv("GITHUB_REPO")
-	if githubRepoName == "" {
-		return Config{}, fmt.Errorf("GITHUB_REPO environment variable not set")
+		return Config{}, fmt.Errorf("PAT_TOKEN environment variable not set")
 	}
 
 	return Config{
 		GithubToken: githubPatToken,
-		Owner:       githubRepoOwner,
-		Repo:        githubRepoName,
+		Owner:       "guimox",
+		Repo:        "ru-menu",
 	}, nil
 }

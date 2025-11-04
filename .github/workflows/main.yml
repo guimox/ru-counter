@@ -82,9 +82,7 @@ jobs:
             NEWSLETTER_NAME3=${{ secrets.NEWSLETTER_NAME3 }}
             NEWSLETTER_JID4=${{ secrets.NEWSLETTER_JID4 }}
             NEWSLETTER_NAME4=${{ secrets.NEWSLETTER_NAME4 }}
-            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-            GITHUB_OWNER=${{ secrets.GITHUB_OWNER }}
-            GITHUB_REPO=${{ secrets.GITHUB_REPO }}
+            PAT_TOKEN=${{ secrets.PAT_TOKEN }}
             EOF
             chmod 600 .env
 

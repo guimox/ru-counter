@@ -13,36 +13,6 @@ The project consists of two main components:
 - **WhatsApp Client**: Connects to WhatsApp using the whatsmeow library to fetch newsletter subscriber data
 - **GitHub Updater**: Updates repository metadata and README files with current subscriber statistics
 
-### Environment configuration
-
-The service requires the following environment variables:
-
-```env
-# WhatsApp Newsletter Configuration
-NUMBER_NEWSLETTERS=4
-NEWSLETTER_JID1=120363394019833967@newsletter
-NEWSLETTER_NAME1=Agrárias
-NEWSLETTER_JID2=your_newsletter_jid
-NEWSLETTER_NAME2=Central
-NEWSLETTER_JID3=your_newsletter_jid
-NEWSLETTER_NAME3=Botânico
-NEWSLETTER_JID4=your_newsletter_jid
-NEWSLETTER_NAME4=Politécnico
-
-# GitHub Configuration
-GITHUB_TOKEN=your_github_token
-GITHUB_OWNER=guimox
-GITHUB_REPO=ru-menu
-```
-
-### Technical stack
-
-- **Go**: Primary programming language
-- **whatsmeow**: WhatsApp Web API client library
-- **SQLite**: Session storage for WhatsApp authentication
-- **GitHub API**: Repository metadata updates
-- **Docker**: Containerized deployment via GitHub Actions
-
 ### Project Structure
 
 ```
