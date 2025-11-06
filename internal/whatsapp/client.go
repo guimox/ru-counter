@@ -39,7 +39,8 @@ func GetNewsletterData() (string, error) {
 }
 
 func GetDetailedNewsletterData() (*NewsletterData, error) {
-	_ = godotenv.Load("../.env")
+	// We don't need to load .env in container as environment variables are set in docker-compose
+	_ = godotenv.Load()
 
 	jidStrNumber := os.Getenv("NUMBER_NEWSLETTERS")
 	if jidStrNumber == "" {
@@ -80,7 +81,7 @@ func GetDetailedNewsletterData() (*NewsletterData, error) {
 func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, error) {
 	dbLog := waLog.Stdout("Database", "INFO", true)
 
-	container, err := sqlstore.New(context.Background(), "sqlite3", "file:../db/session.db?_foreign_keys=on", dbLog)
+	container, err := sqlstore.New(context.Background(), "sqlite3", "file:/root/db/session.db?_foreign_keys=on", dbLog)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +196,7 @@ func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, e
 func getTotalSubscribers(jidStrs []string) (int, error) {
 	dbLog := waLog.Stdout("Database", "INFO", true)
 
-	container, err := sqlstore.New(context.Background(), "sqlite3", "file:../db/session.db?_foreign_keys=on", dbLog)
+	container, err := sqlstore.New(context.Background(), "sqlite3", "file:/root/db/session.db?_foreign_keys=on", dbLog)
 	if err != nil {
 		return 0, err
 	}
