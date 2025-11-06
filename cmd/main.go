@@ -7,14 +7,16 @@ import (
 	"guimox/internal/whatsapp"
 	"log"
 	"os"
-	"regexp"
-	"strconv"
+	"time"
 )
 
 func main() {
 	fmt.Println("Starting WhatsApp Newsletter Counter and GitHub Updater...")
 
-	// Get detailed newsletter subscriber data from WhatsApp
+	updateTime := time.Now()
+	utcTime := updateTime.UTC()
+	fmt.Printf("Update started at: %s\n", utcTime.Format("02/01/2006 15:04:05 MST"))
+
 	fmt.Println("Fetching WhatsApp newsletter data...")
 	newsletterData, err := whatsapp.GetDetailedNewsletterData()
 	if err != nil {
@@ -28,7 +30,6 @@ func main() {
 		fmt.Printf("- %s: %d subscribers\n", newsletter.Name, newsletter.Subscribers)
 	}
 
-	// Load GitHub configuration and create updater
 	fmt.Println("Loading GitHub configuration...")
 	config, err := github.LoadConfig()
 	if err != nil {
@@ -38,7 +39,6 @@ func main() {
 
 	updater := github.NewGitHubUpdater(config)
 
-	// Update GitHub repository with subscriber data
 	fmt.Println("Updating GitHub repository...")
 	ctx := context.Background()
 
@@ -50,6 +50,7 @@ func main() {
 	if err := updater.UpdateDetailedDAU(ctx, &github.NewsletterData{
 		Total:       newsletterData.Total,
 		Newsletters: convertNewsletterInfo(newsletterData.Newsletters),
+		UpdatedAt:   updateTime,
 	}); err != nil {
 		log.Printf("Error updating README DAU: %v", err)
 		os.Exit(1)
@@ -57,6 +58,7 @@ func main() {
 
 	fmt.Printf("✅ Successfully updated GitHub repository with %d subscribers across %d newsletters!\n",
 		newsletterData.Total, len(newsletterData.Newsletters))
+	fmt.Printf("Last updated at %s\n", utcTime.Format("02/01/2006 15:04:05 MST"))
 }
 
 func convertNewsletterInfo(whatsappNewsletters []whatsapp.NewsletterInfo) []github.NewsletterInfo {
@@ -69,21 +71,4 @@ func convertNewsletterInfo(whatsappNewsletters []whatsapp.NewsletterInfo) []gith
 		})
 	}
 	return githubNewsletters
-}
-
-func extractSubscriberCount(info string) (int, error) {
-	// Extract number from "Total subscribers: X" format
-	re := regexp.MustCompile(`Total subscribers: (\d+)`)
-	matches := re.FindStringSubmatch(info)
-
-	if len(matches) < 2 {
-		return 0, fmt.Errorf("could not extract subscriber count from: %s", info)
-	}
-
-	count, err := strconv.Atoi(matches[1])
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse subscriber count: %v", err)
-	}
-
-	return count, nil
 }

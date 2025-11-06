@@ -51,7 +51,6 @@ func GetDetailedNewsletterData() (*NewsletterData, error) {
 		return nil, fmt.Errorf("invalid NUMBER_NEWSLETTERS value: %v", err)
 	}
 
-	// Collect all newsletter JIDs and names
 	var newsletters []NewsletterInfo
 	for i := 1; i <= numNewsletters; i++ {
 		jidStr := os.Getenv(fmt.Sprintf("NEWSLETTER_JID%d", i))
@@ -61,7 +60,7 @@ func GetDetailedNewsletterData() (*NewsletterData, error) {
 
 		nameStr := os.Getenv(fmt.Sprintf("NEWSLETTER_NAME%d", i))
 		if nameStr == "" {
-			nameStr = fmt.Sprintf("Newsletter %d", i) // Default name if not provided
+			nameStr = fmt.Sprintf("Newsletter %d", i)
 		}
 
 		newsletters = append(newsletters, NewsletterInfo{
@@ -70,7 +69,6 @@ func GetDetailedNewsletterData() (*NewsletterData, error) {
 		})
 	}
 
-	// Get detailed subscriber data
 	data, err := getDetailedSubscriberData(newsletters)
 	if err != nil {
 		return nil, err
@@ -95,11 +93,9 @@ func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, e
 	clientLog := waLog.Stdout("Client", "INFO", true)
 	client := whatsmeow.NewClient(deviceStore, clientLog)
 
-	// Channel to track connection status
 	connected := make(chan bool, 1)
 	reconnecting := make(chan bool, 1)
 
-	// Set up event handler for QR codes and connection status
 	eventHandler := func(evt interface{}) {
 		switch v := evt.(type) {
 		case *events.QR:
@@ -123,16 +119,14 @@ func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, e
 	}
 	client.AddEventHandler(eventHandler)
 
-	// Connect to WhatsApp
 	err = client.Connect()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect: %v", err)
 	}
 	defer client.Disconnect()
 
-	// Wait for initial connection and handle reconnections
 	fmt.Println("Waiting for WhatsApp connection and synchronization...")
-	maxWaitTime := 120 * time.Second // Increased wait time
+	maxWaitTime := 120 * time.Second
 	timeout := time.After(maxWaitTime)
 	connectionStable := false
 
@@ -140,7 +134,6 @@ func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, e
 		select {
 		case <-connected:
 			fmt.Println("Connected! Waiting for synchronization to complete...")
-			// Wait for potential reconnection after pairing
 			stabilityCheck := time.After(10 * time.Second)
 			stable := true
 
@@ -160,7 +153,6 @@ func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, e
 			}
 
 		case <-reconnecting:
-			// Just continue waiting for the next connection
 			continue
 		case <-timeout:
 			return nil, fmt.Errorf("timeout waiting for WhatsApp connection")
@@ -168,9 +160,8 @@ func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, e
 	}
 
 	fmt.Println("WhatsApp connection is stable. Fetching newsletter data...")
-	time.Sleep(2 * time.Second) // Final short wait before making requests
+	time.Sleep(2 * time.Second)
 
-	// Get subscriber count for each newsletter
 	var updatedNewsletters []NewsletterInfo
 	var totalSubscribers int
 
@@ -217,11 +208,9 @@ func getTotalSubscribers(jidStrs []string) (int, error) {
 	clientLog := waLog.Stdout("Client", "INFO", true)
 	client := whatsmeow.NewClient(deviceStore, clientLog)
 
-	// Channel to track connection status
 	connected := make(chan bool, 1)
 	reconnecting := make(chan bool, 1)
 
-	// Set up event handler for QR codes and connection status
 	eventHandler := func(evt interface{}) {
 		switch v := evt.(type) {
 		case *events.QR:
@@ -245,16 +234,14 @@ func getTotalSubscribers(jidStrs []string) (int, error) {
 	}
 	client.AddEventHandler(eventHandler)
 
-	// Connect to WhatsApp
 	err = client.Connect()
 	if err != nil {
 		return 0, fmt.Errorf("failed to connect: %v", err)
 	}
 	defer client.Disconnect()
 
-	// Wait for initial connection and handle reconnections
 	fmt.Println("Waiting for WhatsApp connection and synchronization...")
-	maxWaitTime := 120 * time.Second // Increased wait time
+	maxWaitTime := 120 * time.Second
 	timeout := time.After(maxWaitTime)
 	connectionStable := false
 
@@ -262,7 +249,6 @@ func getTotalSubscribers(jidStrs []string) (int, error) {
 		select {
 		case <-connected:
 			fmt.Println("Connected! Waiting for synchronization to complete...")
-			// Wait for potential reconnection after pairing
 			stabilityCheck := time.After(10 * time.Second)
 			stable := true
 
@@ -282,7 +268,6 @@ func getTotalSubscribers(jidStrs []string) (int, error) {
 			}
 
 		case <-reconnecting:
-			// Just continue waiting for the next connection
 			continue
 		case <-timeout:
 			return 0, fmt.Errorf("timeout waiting for WhatsApp connection")
@@ -290,7 +275,7 @@ func getTotalSubscribers(jidStrs []string) (int, error) {
 	}
 
 	fmt.Println("WhatsApp connection is stable. Fetching newsletter data...")
-	time.Sleep(2 * time.Second) // Final short wait before making requests
+	time.Sleep(2 * time.Second)
 
 	var totalSubscribers int
 	for _, jidStr := range jidStrs {

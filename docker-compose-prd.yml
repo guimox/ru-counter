@@ -13,16 +13,12 @@ services:
       - NEWSLETTER_NAME3=${NEWSLETTER_NAME3}
       - NEWSLETTER_JID4=${NEWSLETTER_JID4}
       - NEWSLETTER_NAME4=${NEWSLETTER_NAME4}
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - GITHUB_OWNER=${GITHUB_OWNER}
-      - GITHUB_REPO=${GITHUB_REPO}
     volumes:
       - ./db:/root/db
     ports:
       - "${APP_PORT}:8080"
     networks:
       - ru-counter-network
-
 networks:
   ru-counter-network:
     driver: bridge

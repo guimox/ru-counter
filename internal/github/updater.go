@@ -8,6 +8,8 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/google/go-github/v57/github"
 	"github.com/joho/godotenv"
@@ -40,7 +42,7 @@ func NewGitHubUpdater(config Config) *GitHubUpdater {
 }
 
 func (g *GitHubUpdater) UpdateRepoDescription(ctx context.Context, subscriberCount int) error {
-	description := fmt.Sprintf("With %d DAU, this repo stores 2 microservices created for a solution for university students (UFPR) to receive the daily college restaurant menu on multiple WhatsApp Groups. Using AWS, the project includes a scraper for menu data extraction and a WhatsApp sender for distribution", subscriberCount)
+	description := fmt.Sprintf("With %d DAU, this repository stores 3 microservices created for a solution for university students (UFPR) to receive the daily college restaurant menu on multiple WhatsApp Groups. Using AWS, the project includes a scraper for menu data extraction and a WhatsApp sender for distribution", subscriberCount)
 
 	repo := &github.Repository{
 		Description: github.String(description),
@@ -99,17 +101,16 @@ func (g *GitHubUpdater) UpdateReadmeDAU(ctx context.Context, subscriberCount int
 	return nil
 }
 
-// NewsletterInfo represents a WhatsApp newsletter with subscriber count
 type NewsletterInfo struct {
 	Name        string
 	JID         string
 	Subscribers int
 }
 
-// NewsletterData represents the complete newsletter data
 type NewsletterData struct {
 	Total       int
 	Newsletters []NewsletterInfo
+	UpdatedAt   time.Time
 }
 
 func (g *GitHubUpdater) UpdateDetailedDAU(ctx context.Context, data *NewsletterData) error {
@@ -129,22 +130,31 @@ func (g *GitHubUpdater) UpdateDetailedDAU(ctx context.Context, data *NewsletterD
 		return fmt.Errorf("failed to decode README content: %w", err)
 	}
 
-	// Update the total DAU count
-	totalRe := regexp.MustCompile(`\*\*(\d{1,3}(?:,\d{3})*|\d+)\s+daily active users\*\*`)
-	formattedTotal := formatNumber(data.Total)
-	updatedContent := totalRe.ReplaceAllString(string(content), fmt.Sprintf("**%s daily active users**", formattedTotal))
+	timestamp := data.UpdatedAt.UTC().Format("02/01/2006 15:04:05 MST")
 
-	// Update individual newsletter subscriber counts
+	var newsletterLines []string
 	for _, newsletter := range data.Newsletters {
-		// Match pattern like "- RU [Name](link) = X users"
-		pattern := fmt.Sprintf(`(- RU \[%s\]\([^)]+\)) = \d+ users`, regexp.QuoteMeta(newsletter.Name))
-		re := regexp.MustCompile(pattern)
-		replacement := fmt.Sprintf("${1} = %d users", newsletter.Subscribers)
-		updatedContent = re.ReplaceAllString(updatedContent, replacement)
+		newsletterLines = append(newsletterLines, fmt.Sprintf("- %s = %d users", newsletter.Name, newsletter.Subscribers))
+	}
+
+	dauBlock := fmt.Sprintf(`Right now, the system has **%d daily active users** who receive the menu every day.
+
+%s
+
+Last updated at %s`, data.Total, strings.Join(newsletterLines, "\n"), timestamp)
+
+	dauBlockPattern := `Right now, the system has[\s\S]*?Last updated at: [^\n\r]*`
+	dauBlockRe := regexp.MustCompile(dauBlockPattern)
+
+	var updatedContent string
+	if dauBlockRe.MatchString(string(content)) {
+		updatedContent = dauBlockRe.ReplaceAllString(string(content), dauBlock)
+	} else {
+		updatedContent = string(content) + "\n\n" + dauBlock
 	}
 
 	opts := &github.RepositoryContentFileOptions{
-		Message: github.String(fmt.Sprintf("ru-counter: Update DAU to %s users with detailed breakdown (from WhatsApp newsletter subscribers)", formattedTotal)),
+		Message: github.String(fmt.Sprintf("ru-counter: Update DAU to %d users with detailed breakdown (updated at %s)", data.Total, data.UpdatedAt.UTC().Format("02/01/2006 15:04:05 MST"))),
 		Content: []byte(updatedContent),
 		SHA:     fileContent.SHA,
 		Branch:  github.String("main"),
@@ -166,7 +176,6 @@ func (g *GitHubUpdater) UpdateDetailedDAU(ctx context.Context, data *NewsletterD
 }
 
 func formatNumber(n int) string {
-	// Return plain numbers without any formatting
 	return strconv.Itoa(n)
 }
 
