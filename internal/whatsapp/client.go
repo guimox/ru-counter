@@ -82,7 +82,12 @@ func GetDetailedNewsletterData() (*NewsletterData, error) {
 func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, error) {
 	dbLog := waLog.Stdout("Database", "INFO", true)
 
-	container, err := sqlstore.New(context.Background(), "sqlite3", "file:../db/session.db?_foreign_keys=on", dbLog)
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "file:../db/session.db?_foreign_keys=on"
+	}
+
+	container, err := sqlstore.New(context.Background(), "sqlite3", dbPath, dbLog)
 	if err != nil {
 		return nil, err
 	}
@@ -192,107 +197,4 @@ func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, e
 		Total:       totalSubscribers,
 		Newsletters: updatedNewsletters,
 	}, nil
-}
-
-func getTotalSubscribers(jidStrs []string) (int, error) {
-	dbLog := waLog.Stdout("Database", "INFO", true)
-
-	container, err := sqlstore.New(context.Background(), "sqlite3", "file:/root/db/session.db?_foreign_keys=on", dbLog)
-	if err != nil {
-		return 0, err
-	}
-
-	deviceStore, err := container.GetFirstDevice(context.Background())
-	if err != nil {
-		return 0, err
-	}
-
-	clientLog := waLog.Stdout("Client", "INFO", true)
-	client := whatsmeow.NewClient(deviceStore, clientLog)
-
-	connected := make(chan bool, 1)
-	reconnecting := make(chan bool, 1)
-
-	eventHandler := func(evt interface{}) {
-		switch v := evt.(type) {
-		case *events.QR:
-			fmt.Println("QR code received, please scan it with your phone:")
-			qrterminal.GenerateHalfBlock(v.Codes[0], qrterminal.L, os.Stdout)
-		case *events.Connected:
-			fmt.Println("WhatsApp connected successfully!")
-			select {
-			case connected <- true:
-			default:
-			}
-		case *events.Disconnected:
-			fmt.Println("WhatsApp disconnected, reconnecting...")
-			select {
-			case reconnecting <- true:
-			default:
-			}
-		case *events.LoggedOut:
-			fmt.Println("WhatsApp logged out")
-		}
-	}
-	client.AddEventHandler(eventHandler)
-
-	err = client.Connect()
-	if err != nil {
-		return 0, fmt.Errorf("failed to connect: %v", err)
-	}
-	defer client.Disconnect()
-
-	fmt.Println("Waiting for WhatsApp connection and synchronization...")
-	maxWaitTime := 120 * time.Second
-	timeout := time.After(maxWaitTime)
-	connectionStable := false
-
-	for !connectionStable {
-		select {
-		case <-connected:
-			fmt.Println("Connected! Waiting for synchronization to complete...")
-			stabilityCheck := time.After(10 * time.Second)
-			stable := true
-
-		stabilityLoop:
-			for stable {
-				select {
-				case <-reconnecting:
-					fmt.Println("Reconnection detected, waiting for stability...")
-					stable = false
-					break stabilityLoop
-				case <-stabilityCheck:
-					connectionStable = true
-					break stabilityLoop
-				case <-timeout:
-					return 0, fmt.Errorf("timeout waiting for stable connection")
-				}
-			}
-
-		case <-reconnecting:
-			continue
-		case <-timeout:
-			return 0, fmt.Errorf("timeout waiting for WhatsApp connection")
-		}
-	}
-
-	fmt.Println("WhatsApp connection is stable. Fetching newsletter data...")
-	time.Sleep(2 * time.Second)
-
-	var totalSubscribers int
-	for _, jidStr := range jidStrs {
-		jid, err := types.ParseJID(jidStr)
-		if err != nil {
-			return 0, err
-		}
-
-		info, err := client.GetNewsletterInfo(jid)
-		if err != nil {
-			return 0, fmt.Errorf("failed to get newsletter info for %s: %v", jidStr, err)
-		}
-
-		totalSubscribers += int(info.ThreadMeta.SubscriberCount)
-	}
-
-	return totalSubscribers, nil
 }
