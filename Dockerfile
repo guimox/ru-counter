@@ -25,4 +25,5 @@ RUN mkdir -p db
 
 EXPOSE 8080
 
-CMD ["./main"]
+# Keep container alive but don't run the application
+CMD ["tail", "-f", "/dev/null"]

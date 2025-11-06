@@ -15,8 +15,6 @@ services:
       - NEWSLETTER_NAME4=${NEWSLETTER_NAME4}
     volumes:
       - ./db:/root/db
-    ports:
-      - "${APP_PORT}:8080"
     networks:
       - ru-counter-network
 networks:
