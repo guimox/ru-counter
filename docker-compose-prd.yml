@@ -4,7 +4,6 @@ services:
     container_name: ru-counter-app
     restart: unless-stopped
     environment:
-      - DB_PATH=file:/root/db/session.db?_foreign_keys=on
       - NUMBER_NEWSLETTERS=${NUMBER_NEWSLETTERS}
       - NEWSLETTER_JID1=${NEWSLETTER_JID1}
       - NEWSLETTER_NAME1=${NEWSLETTER_NAME1}
