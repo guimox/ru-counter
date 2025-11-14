@@ -14,9 +14,11 @@ services:
       - NEWSLETTER_JID4=${NEWSLETTER_JID4}
       - NEWSLETTER_NAME4=${NEWSLETTER_NAME4}
     volumes:
-      - ./db:/root/db
+      - db-data:/root/db
     networks:
       - ru-counter-network
+volumes:
+  db-data:
 networks:
   ru-counter-network:
     driver: bridge
