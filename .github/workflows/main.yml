@@ -33,7 +33,7 @@ jobs:
           context: .
           dockerfile: Dockerfile
           push: true
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/${{ github.repository }}/${{ secrets.DOCKER_CONTAINER_NAME }}:v1.0.0
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -21,7 +21,7 @@ WORKDIR /root/
 
 COPY --from=builder /app/cmd/main .
 
-RUN mkdir -p db
+RUN mkdir -p db && chmod 777 db
 
 EXPOSE 8080
 
