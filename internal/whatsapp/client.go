@@ -39,8 +39,7 @@ func GetNewsletterData() (string, error) {
 }
 
 func GetDetailedNewsletterData() (*NewsletterData, error) {
-	if err := godotenv.Load("/root/.env"); err != nil {
-		// It's okay if .env file doesn't exist, environment variables can be set by Docker
+	if err := godotenv.Load(); err != nil {
 		fmt.Println("Warning: Could not load .env file, relying on environment variables")
 	}
 
@@ -83,7 +82,10 @@ func GetDetailedNewsletterData() (*NewsletterData, error) {
 func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, error) {
 	dbLog := waLog.Stdout("Database", "INFO", true)
 
-	dbPath := "file:/root/db/session.db?_foreign_keys=on"
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "file:./db/session.db?_foreign_keys=on"
+	}
 
 	container, err := sqlstore.New(context.Background(), "sqlite3", dbPath, dbLog)
 	if err != nil {

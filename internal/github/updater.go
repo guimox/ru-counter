@@ -143,7 +143,7 @@ func (g *GitHubUpdater) UpdateDetailedDAU(ctx context.Context, data *NewsletterD
 
 Last updated at %s`, data.Total, strings.Join(newsletterLines, "\n"), timestamp)
 
-	dauBlockPattern := `Right now, the system has[\s\S]*?Last updated at: [^\n\r]*`
+	dauBlockPattern := `Right now, the system has[\s\S]*?Last updated at [^\n\r]*`
 	dauBlockRe := regexp.MustCompile(dauBlockPattern)
 
 	var updatedContent string
@@ -225,7 +225,7 @@ func (g *GitHubUpdater) PerformWeeklyUpdate() {
 
 	log.Printf("Current DAU: %d", currentDAU)
 
-	newDAU := currentDAU + 100
+	newDAU := currentDAU
 
 	if err := g.UpdateRepoDescription(ctx, newDAU); err != nil {
 		log.Printf("Error updating description: %v", err)
@@ -241,7 +241,9 @@ func (g *GitHubUpdater) PerformWeeklyUpdate() {
 }
 
 func LoadConfig() (Config, error) {
-	_ = godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("Warning: Could not load .env file, relying on environment variables")
+	}
 
 	githubPatToken := os.Getenv("PAT_TOKEN")
 	if githubPatToken == "" {
