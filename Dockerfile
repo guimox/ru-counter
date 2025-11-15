@@ -1,28 +1,25 @@
-FROM golang:1.25-alpine AS builder
+FROM golang:1.25 AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache gcc musl-dev sqlite-dev
+RUN apt-get update && apt-get install -y gcc libsqlite3-dev
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
 
-ENV CGO_ENABLED=1
-ENV GOOS=linux
-RUN cd cmd && go build -a -ldflags '-linkmode external -extldflags "-static"' -o main .
+RUN go build -ldflags="-s -w" -o main ./cmd
 
-FROM alpine:latest
+FROM debian:stable-slim
 
-RUN apk --no-cache add ca-certificates sqlite
+RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root/
-
-COPY --from=builder /app/cmd/main .
+COPY --from=builder /app/main .
 
 RUN mkdir -p db && chmod 777 db
 
 EXPOSE 8080
 
-CMD ["tail", "-f", "/dev/null"]
+CMD ["./main"]

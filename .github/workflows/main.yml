@@ -33,7 +33,7 @@ jobs:
           context: .
           dockerfile: Dockerfile
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: ghcr.io/${{ github.repository }}/${{ secrets.DOCKER_CONTAINER_NAME }}:v1.0.0
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -72,7 +72,6 @@ jobs:
             cat > .env << EOF
             APP_PORT=${{ secrets.APP_PORT }}
             DOCKER_CONTAINER_NAME=${{ secrets.DOCKER_CONTAINER_NAME }}
-            GITHUB_REPOSITORY=${{ github.repository }}
             PAT_TOKEN=${{ secrets.PAT_TOKEN }}
             NUMBER_NEWSLETTERS=${{ secrets.NUMBER_NEWSLETTERS }}
             NEWSLETTER_JID1=${{ secrets.NEWSLETTER_JID1 }}

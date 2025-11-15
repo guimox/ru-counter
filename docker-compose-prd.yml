@@ -4,6 +4,7 @@ services:
     container_name: ru-counter-app
     restart: unless-stopped
     environment:
+      - PAT_TOKEN=${PAT_TOKEN}
       - NUMBER_NEWSLETTERS=${NUMBER_NEWSLETTERS}
       - NEWSLETTER_JID1=${NEWSLETTER_JID1}
       - NEWSLETTER_NAME1=${NEWSLETTER_NAME1}
@@ -13,6 +14,7 @@ services:
       - NEWSLETTER_NAME3=${NEWSLETTER_NAME3}
       - NEWSLETTER_JID4=${NEWSLETTER_JID4}
       - NEWSLETTER_NAME4=${NEWSLETTER_NAME4}
+      - DB_PATH=file:/root/db/session.db?_foreign_keys=on
     volumes:
       - db-data:/root/db
     networks:
