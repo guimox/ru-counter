@@ -132,42 +132,19 @@ func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, e
 	}
 	defer client.Disconnect()
 
-	fmt.Println("Waiting for WhatsApp connection and synchronization...")
+	fmt.Println("Waiting for WhatsApp connection...")
 	maxWaitTime := 120 * time.Second
 	timeout := time.After(maxWaitTime)
-	connectionStable := false
 
-	for !connectionStable {
-		select {
-		case <-connected:
-			fmt.Println("Connected! Waiting for synchronization to complete...")
-			stabilityCheck := time.After(10 * time.Second)
-			stable := true
-
-		stabilityLoop:
-			for stable {
-				select {
-				case <-reconnecting:
-					fmt.Println("Reconnection detected, waiting for stability...")
-					stable = false
-					break stabilityLoop
-				case <-stabilityCheck:
-					connectionStable = true
-					break stabilityLoop
-				case <-timeout:
-					return nil, fmt.Errorf("timeout waiting for stable connection")
-				}
-			}
-
-		case <-reconnecting:
-			continue
-		case <-timeout:
-			return nil, fmt.Errorf("timeout waiting for WhatsApp connection")
-		}
+	select {
+	case <-connected:
+		fmt.Println("WhatsApp connected! Pausing for 5 seconds to stabilize...")
+		time.Sleep(5 * time.Second)
+	case <-timeout:
+		return nil, fmt.Errorf("timeout waiting for WhatsApp connection")
 	}
 
-	fmt.Println("WhatsApp connection is stable. Fetching newsletter data...")
-	time.Sleep(2 * time.Second)
+	fmt.Println("WhatsApp connection established. Fetching newsletter data...")
 
 	var updatedNewsletters []NewsletterInfo
 	var totalSubscribers int
