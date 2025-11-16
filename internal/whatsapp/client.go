@@ -130,7 +130,6 @@ func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, e
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect: %v", err)
 	}
-	defer client.Disconnect()
 
 	fmt.Println("Waiting for WhatsApp connection...")
 	maxWaitTime := 120 * time.Second
@@ -169,6 +168,10 @@ func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, e
 			Subscribers: subscribers,
 		})
 	}
+
+	fmt.Println("Data fetched. Keeping session alive for 30 seconds to stabilize...")
+	time.Sleep(30 * time.Second)
+	fmt.Println("Disconnecting now.")
 
 	return &NewsletterData{
 		Total:       totalSubscribers,
