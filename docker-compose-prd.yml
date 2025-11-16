@@ -1,6 +1,6 @@
 services:
   ru-counter:
-    image: ghcr.io/${GITHUB_REPOSITORY}/${DOCKER_CONTAINER_NAME}:v1.0.0
+    image: ghcr.io/${GITHUB_REPOSITORY}/${DOCKER_CONTAINER_NAME}:latest
     container_name: ru-counter-app
     restart: unless-stopped
     environment:
