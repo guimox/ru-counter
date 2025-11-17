@@ -22,4 +22,4 @@ RUN mkdir -p db && chmod 777 db
 
 EXPOSE 8080
 
-CMD ["./main"]
+# CMD ["./main"] no autostart
