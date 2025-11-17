@@ -3,7 +3,7 @@ name: Build and Deploy Go API
 on:
   push:
     branches:
-      - main
+      - fix/pipeline-with-docker
 
 jobs:
   build-deploy:
