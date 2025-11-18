@@ -18,6 +18,7 @@ services:
       - DB_PATH=file:/root/db/session.db?_foreign_keys=on
     volumes:
       - db-data:/root/db
+      - ./.env:/root/.env
     networks:
       - ru-counter-network
 volumes:

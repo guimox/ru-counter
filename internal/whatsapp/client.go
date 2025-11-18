@@ -154,7 +154,7 @@ func getDetailedSubscriberData(newsletters []NewsletterInfo) (*NewsletterData, e
 			return nil, fmt.Errorf("failed to parse JID for %s: %v", newsletter.Name, err)
 		}
 
-		info, err := client.GetNewsletterInfo(jid)
+		info, err := client.GetNewsletterInfo(context.Background(), jid)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get newsletter info for %s: %v", newsletter.Name, err)
 		}

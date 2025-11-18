@@ -17,16 +17,20 @@ The project consists of two main components:
 
 ```
 ru-counter/
-├── cmd/
-│   └── main.go              # Application entry point
-├── internal/
-│   ├── whatsapp/
-│   │   └── client.go        # WhatsApp newsletter client
-│   └── github/
-│       └── updater.go       # GitHub repository updater
-├── db/                      # SQLite session storage
-├── docker-compose.yml       # Docker configuration
-└── go.mod                   # Go dependencies
+├── cmd
+│   └── main.go
+├── db
+│   └── session.db
+├── docker-compose-prd.yml
+├── Dockerfile
+├── go.mod
+├── go.sum
+├── internal
+│   ├── github
+│   │   └── updater.go
+│   └── whatsapp
+│       └── client.go
+└── README.md
 ```
 
 ### Integration with RU Menu
