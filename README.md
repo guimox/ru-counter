@@ -37,6 +37,10 @@ ru-counter/
 
 This counter service is part of the larger [ru-menu](https://github.com/guimox/ru-menu) ecosystem that provides daily university restaurant menus to students via WhatsApp. The counter ensures accurate tracking of user engagement and service reach across multiple campus locations.
 
+### Cronjob
+
+This service runs once every friday.
+
 ### Data Flow
 
 1. **Authentication**: Service displays QR code for WhatsApp Web pairing
