@@ -1,4 +1,4 @@
-package github
+package main
 
 import (
 	"context"
@@ -242,7 +242,7 @@ func (g *GitHubUpdater) PerformWeeklyUpdate() {
 
 func LoadConfig() (Config, error) {
 	if err := godotenv.Load(); err != nil {
-		fmt.Println("Warning: Could not load .env file, relying on environment variables")
+		log.Printf("Warning: Could not load .env file, relying on environment variables")
 	}
 
 	githubPatToken := os.Getenv("PAT_TOKEN")
