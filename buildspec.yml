@@ -1,0 +1,16 @@
+phases:
+  install:
+    runtime-versions:
+      golang: 1.21
+  build:
+    commands:
+      - echo "Building Go Lambda function..."
+      - GOOS=linux GOARCH=arm64 go build -o bootstrap .
+  post_build:
+    commands:
+      - echo "Zipping deployment package..."
+      - zip deployment.zip bootstrap
+      - |
+        echo "Deploying to production..."
+        aws lambda update-function-code --function-name go-ru-counter --zip-file fileb://deployment.zip --region sa-east-1
+      - echo "Done!"
