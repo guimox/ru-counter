@@ -1,29 +1,40 @@
-name: Build and Deploy Go API
+name: Deploy Lambda
 
 on:
   push:
-    branches:
-      - main
+    branches: [deploy]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION  }}
+  FUNCTION_NAME: ${{ secrets.LAMBDA_FUNCTION_NAME }}
 
 jobs:
-  deploy-lambda:
-    name: Deploy Go Lambda
-    runs-on: ubuntu-24.04
-    needs: build-deploy
+  deploy:
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Check out source
         uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version-file: go.mod
+          cache: true
 
-      - name: Build Lambda binary
+      - name: Build Lambda package
+        env:
+          GOOS: linux
+          GOARCH: arm64
+          CGO_ENABLED: "0"
         run: |
-          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bootstrap .
-          zip -j lambda.zip bootstrap
+          go build -trimpath -ldflags='-s -w' -o bootstrap .
+          zip -j function.zip bootstrap
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -32,11 +43,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Create or update Lambda function
+      - name: Create or update Lambda
         env:
-          FUNCTION_NAME: go-ru-counter
           LAMBDA_ROLE_ARN: ${{ secrets.AWS_LAMBDA_ROLE_ARN }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
           PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
           NUMBER_NEWSLETTERS: ${{ secrets.NUMBER_NEWSLETTERS }}
           NEWSLETTER_JID1: ${{ secrets.NEWSLETTER_JID1 }}
@@ -48,63 +57,43 @@ jobs:
           NEWSLETTER_JID4: ${{ secrets.NEWSLETTER_JID4 }}
           NEWSLETTER_NAME4: ${{ secrets.NEWSLETTER_NAME4 }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-          DB_FILE_NAME: ${{ secrets.DB_FILE_NAME }}
+          DB_FILE_NAME: ${{ secrets.DB_FILE_NAME || 'session.db' }}
         run: |
-          set -e
+          set -euo pipefail
 
-          ENV_JSON=$(jq -n \
+          environment=$(jq -n \
             --arg pat "$PAT_TOKEN" \
-            --arg num "$NUMBER_NEWSLETTERS" \
-            --arg jid1 "$NEWSLETTER_JID1" \
-            --arg name1 "$NEWSLETTER_NAME1" \
-            --arg jid2 "$NEWSLETTER_JID2" \
-            --arg name2 "$NEWSLETTER_NAME2" \
-            --arg jid3 "$NEWSLETTER_JID3" \
-            --arg name3 "$NEWSLETTER_NAME3" \
-            --arg jid4 "$NEWSLETTER_JID4" \
-            --arg name4 "$NEWSLETTER_NAME4" \
-            --arg bucket "$S3_BUCKET_NAME" \
-            --arg db "$DB_FILE_NAME" \
-            --arg region "$AWS_REGION" \
-            '{
-              PAT_TOKEN: $pat,
-              NUMBER_NEWSLETTERS: $num,
-              NEWSLETTER_JID1: $jid1,
-              NEWSLETTER_NAME1: $name1,
-              NEWSLETTER_JID2: $jid2,
-              NEWSLETTER_NAME2: $name2,
-              NEWSLETTER_JID3: $jid3,
-              NEWSLETTER_NAME3: $name3,
-              NEWSLETTER_JID4: $jid4,
-              NEWSLETTER_NAME4: $name4,
-              S3_BUCKET_NAME: $bucket,
-              DB_FILE_NAME: $db,
-              AWS_REGION: $region
-            }')
+            --arg count "$NUMBER_NEWSLETTERS" \
+            --arg jid1 "$NEWSLETTER_JID1" --arg name1 "$NEWSLETTER_NAME1" \
+            --arg jid2 "$NEWSLETTER_JID2" --arg name2 "$NEWSLETTER_NAME2" \
+            --arg jid3 "$NEWSLETTER_JID3" --arg name3 "$NEWSLETTER_NAME3" \
+            --arg jid4 "$NEWSLETTER_JID4" --arg name4 "$NEWSLETTER_NAME4" \
+            --arg bucket "$S3_BUCKET_NAME" --arg db "$DB_FILE_NAME" \
+            '{Variables:{PAT_TOKEN:$pat,NUMBER_NEWSLETTERS:$count,NEWSLETTER_JID1:$jid1,NEWSLETTER_NAME1:$name1,NEWSLETTER_JID2:$jid2,NEWSLETTER_NAME2:$name2,NEWSLETTER_JID3:$jid3,NEWSLETTER_NAME3:$name3,NEWSLETTER_JID4:$jid4,NEWSLETTER_NAME4:$name4,S3_BUCKET_NAME:$bucket,DB_FILE_NAME:$db}}')
 
           if aws lambda get-function --function-name "$FUNCTION_NAME" >/dev/null 2>&1; then
             aws lambda update-function-code \
               --function-name "$FUNCTION_NAME" \
-              --zip-file fileb://lambda.zip >/dev/null
-
+              --architectures arm64 \
+              --zip-file fileb://function.zip
+            aws lambda wait function-updated --function-name "$FUNCTION_NAME"
             aws lambda update-function-configuration \
               --function-name "$FUNCTION_NAME" \
               --runtime provided.al2023 \
               --handler bootstrap \
-              --timeout 900 \
-              --memory-size 512 \
-              --environment "Variables=${ENV_JSON}" >/dev/null
+              --architectures arm64 \
+              --timeout 300 \
+              --memory-size 1024 \
+              --environment "$environment"
           else
             aws lambda create-function \
               --function-name "$FUNCTION_NAME" \
               --runtime provided.al2023 \
-              --role "$LAMBDA_ROLE_ARN" \
               --handler bootstrap \
-              --zip-file fileb://lambda.zip \
-              --timeout 900 \
-              --memory-size 512 \
-              --architectures x86_64 \
-              --environment "Variables=${ENV_JSON}" >/dev/null
+              --architectures arm64 \
+              --role "$LAMBDA_ROLE_ARN" \
+              --timeout 300 \
+              --memory-size 1024 \
+              --environment "$environment" \
+              --zip-file fileb://function.zip
           fi
-
-          aws lambda publish-version --function-name "$FUNCTION_NAME" >/dev/null
