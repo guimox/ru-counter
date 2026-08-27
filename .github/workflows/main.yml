@@ -10,8 +10,8 @@ permissions:
   id-token: write
 
 env:
-  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
-  FUNCTION_NAME: ${{ vars.LAMBDA_FUNCTION_NAME || 'ru-counter' }}
+  AWS_REGION: ${{ vars.AWS_REGION  }}
+  FUNCTION_NAME: ${{ vars.LAMBDA_FUNCTION_NAME }}
 
 jobs:
   deploy:
@@ -42,14 +42,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-      - name: Get Lambda ARN
-        run: |
-          arn=$(aws lambda get-function \
-            --function-name "$FUNCTION_NAME" \
-            --query 'Configuration.FunctionArn' \
-            --output text)
-          echo "Lambda ARN: $arn"
-          echo "lambda_arn=$arn" >> "$GITHUB_OUTPUT"
+
       - name: Create or update Lambda
         env:
           LAMBDA_ROLE_ARN: ${{ secrets.AWS_LAMBDA_ROLE_ARN }}
