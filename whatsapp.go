@@ -161,7 +161,6 @@ func getDetailedSubscriberData(ctx context.Context, newsletters []NewsletterInfo
 	}
 	client.AddEventHandler(eventHandler)
 
-	// ✅ Fix 5: single Connect() call
 	if err := client.Connect(); err != nil {
 		return nil, fmt.Errorf("failed to connect: %w", err)
 	}

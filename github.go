@@ -252,7 +252,7 @@ func LoadConfig() (Config, error) {
 
 	return Config{
 		GithubToken: githubPatToken,
-		Owner:       "guimox",
+		Owner:       "ghlps",
 		Repo:        "ru-menu",
 	}, nil
 }
